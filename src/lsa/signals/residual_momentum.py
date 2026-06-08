@@ -133,6 +133,11 @@ def compute_rolling_betas(
         if sub.empty:
             continue
 
+        # Cross-tier migrations can produce duplicate (ID, DATE) rows in the
+        # merged panel (e.g., simultaneous-membership edge cases). Dedupe
+        # before pivoting; returns are identical across duplicate rows.
+        sub = sub.drop_duplicates(subset=[id_col, date_col], keep="first")
+
         wide = sub.pivot(index=date_col, columns=id_col, values=return_col)
         m = etf_returns_wide[etf]
         wide, m_aligned = wide.align(m, axis=0, join="left")
@@ -140,6 +145,12 @@ def compute_rolling_betas(
         cov = wide.rolling(window, min_periods=min_periods).cov(m_aligned)
         var = m_aligned.rolling(window, min_periods=min_periods).var()
         beta_wide = cov.div(var, axis=0)
+
+        # PIT-safety: pandas .rolling(window) ends AT the current observation
+        # (inclusive). Without this shift, residual_t would use beta_t which
+        # itself was estimated using return_t, creating a subtle lookahead.
+        # Lag by 1 day so residual_t = ret_t - beta_{t-1} * etf_t.
+        beta_wide = beta_wide.shift(1)
 
         long_form = (beta_wide.stack().rename(out_col).reset_index())
         out_chunks.append(long_form)
@@ -415,6 +426,13 @@ def build_residual_momentum_strategy(
                 "window": window, "min_periods": min_periods,
                 "lookback_days": lookback_days, "skip_days": skip_days,
                 "top_pct": top_pct, "bottom_pct": bottom_pct,
+                "min_cohort_size": min_cohort_size, "holding_days": holding_days,
+            },
+            "dollar_neutrality_max_abs": float(sums.abs().max()) if len(sums) else 0.0,
+            "dollar_neutrality_violations": int((sums.abs() > 1e-6).sum()),
+        },
+    )
+              "top_pct": top_pct, "bottom_pct": bottom_pct,
                 "min_cohort_size": min_cohort_size, "holding_days": holding_days,
             },
             "dollar_neutrality_max_abs": float(sums.abs().max()) if len(sums) else 0.0,
