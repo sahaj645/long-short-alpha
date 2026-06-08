@@ -1,0 +1,36 @@
+# Base configuration — Sub-Industry Leader-Follower (H6)
+
+universe:
+  indices: [SP400, SP500, SP600]
+  start_date: "2016-03-01"
+  end_date: "2025-12-31"
+  liquidity_floor_dollar_volume: 5_000_000   # 21d ADV floor in USD
+  min_subindustry_members: 4
+  leader_cap_share_range: [0.20, 0.70]
+
+residualization:
+  benchmark: sector_etf            # sector_etf | sector_basket
+  beta_lookback_days: 126
+  winsorization_pct: 0.50          # daily return ±50% cap
+
+signal:
+  leader_definition: top_cap_21d   # rolling 21d mean market cap
+  horizons: [1, 2, 3, 4, 5]        # lead-lag horizons (days)
+  signal_cap_sigma: 2.0
+
+portfolio:
+  weighting: equal_within_subindustry
+  long_short: symmetric
+  rebalance: daily
+  holding_period: 3                # exit at close of t+3
+
+costs:
+  spread_bps:    { SP500: 1.5, SP400: 4.0, SP600: 9.0 }
+  impact_alpha:  { SP500: 6.0, SP400: 12.0, SP600: 22.0 }
+  borrow_bps:    { SP500: 25,  SP400: 75,   SP600: 150 }
+
+validation:
+  in_sample_end: "2022-12-31"
+  oos_start:     "2023-01-01"
+  multiple_comparison: benjamini_hochberg
+  alpha: 0.05
