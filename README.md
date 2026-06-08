@@ -311,21 +311,7 @@ Run with `pytest -v`.
 
 **Day-0 PnL check.** The backtester guarantees that on the first day of execution (no prior weights), gross PnL is exactly 0. This invariant is verifiable from any `BacktestResult.accounting_frame.iloc[0]`.
 
-## 12. Future Work
 
-In priority order, with cost-to-implement estimates.
-
-| # | Initiative | Goal | Effort | Expected impact |
-|---|---|---|---|---|
-| 1 | **Full SP1500 deployment** | Run the strategy across the full S&P 1500 universe (currently SP500-only due to sandbox memory). | 2 weeks (memory-efficient signal computation: chunk by sector or year). | Gross alpha estimated to lift 50-100% per Hou 2007. Likely positive Sharpe at current 3 bps cost assumption. |
-| 2 | **Liquidity-aware follower selection** | Within each selected Sub-Industry, trade only the top-quartile most liquid followers by trailing dollar volume. | 1 week (universe filter + portfolio_builder extension). | TC reduction 40-60%. Sharpe expected to flip positive at SP500 scale. |
-| 3 | **Per-tier impact cost calibration** | Replace flat 3 bps cost with execution-desk-calibrated tiered + square-root-impact surface. | 3 days (implementation already present; needs calibration data). | More accurate net Sharpe; likely shows current SP500 cost ~1 bps not 3 bps. |
-| 4 | **Walk-forward validation** | Refit rolling beta and Sub-Industry rankings on rolling lookback only. | 1 week. | Robustness signal. Expected walk-forward Sharpe within 70% of full-sample. |
-| 5 | **Alternative leader definitions** | Test top-1-by-dollar-volume and top-3-cap-weighted-composite leaders against the baseline top-1-by-cap. | 1 week. | Robustness signal. Expected ≤ 15% Sharpe variation per E1's framework. |
-| 6 | **Regime-conditional sizing** | Scale exposure by cross-sectional dispersion regime (high dispersion → up-size, low → down-size). | 2 weeks. | Expected drawdown reduction in low-dispersion regimes (mid-2017, mid-2019). |
-| 7 | **Cross-tier lead-lag** | Test whether SP500 leader residuals predict SP400/600 same-industry followers (the H9 hypothesis from the catalog). | 3 weeks. | New strategy variant; likely 1.5× capacity. |
-| 8 | **End-to-end runner script** | `scripts/run_h6.py` that wires data → signal → portfolio → backtest → analytics in one command. | 1 day. | Reproducibility + interview demo value. |
-| 9 | **Production execution harness** | Live paper-trading loop with realized-fill ingestion and cost reconciliation. | 4 weeks. | Pre-production validation. |
 
 ## License
 
